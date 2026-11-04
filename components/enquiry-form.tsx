@@ -70,15 +70,27 @@ const sourceByVariant = {
   contact: { path: "/contact", label: "contact form" },
 } as const satisfies Record<Variant, { path: string; label: string }>;
 
+/**
+ * Inbox keyword prefixed to the subject so enquiries can be filtered or
+ * labelled automatically: brand, creator, and everything else.
+ */
+const subjectTagByVariant: Record<Variant, string> = {
+  brand: "STCO_BrandEnquiries",
+  creator: "STCO_CreatorEnquiries",
+  contact: "STCO_GeneralEnquiries",
+};
+
 /** Subject and plain-text body of the email the visitor is about to send. */
 function buildEmail(kind: Variant, data: Record<string, unknown>) {
   const name = String(data.name ?? "");
-  const subject =
+  const baseSubject =
     kind === "brand"
       ? `Brand enquiry — ${String(data.business ?? "") || name}`
       : kind === "creator"
         ? `Creator application — ${name}`
         : `Website enquiry — ${String(data.enquiryType || "General enquiry")} (${name})`;
+  const tag = subjectTagByVariant[kind];
+  const subject = `[${tag}] ${baseSubject}`;
   const rows = formatEnquiry(kind, data)
     .map((row) => `${row.label}: ${row.value}`)
     .join("\n");
